@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Тест на проницательность</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .game-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-sizing: border-box;
+            position: relative;
+        }
+        h2 { font-size: 24px; margin-bottom: 20px; line-height: 1.4; }
+        .answers-wrapper {
+            position: relative;
+            min-height: 180px;
+            margin-top: 20px;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid transparent;
+            padding: 14px 20px;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            width: 100%;
+            font-size: 16px;
+            transition: background 0.2s ease;
+            text-align: left;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            background: white;
+            color: #ff758c;
+        }
+        .progress {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .comment-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fffb00;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+        .next-btn {
+            background: #fffb00;
+            color: #333;
+            font-weight: bold;
+            text-align: center;
+        }
+        .next-btn:hover { background: #fff; color: #000; }
+        
+        #run-btn {
+            position: absolute;
+            width: 120px;
+            text-align: center;
+            z-index: 1000;
+            left: 0;
+            top: 60px;
+            transition: left 0.15s ease-out, top 0.15s ease-out;
+        }
+
+        .result-percent { 
+            font-size: 64px; 
+            font-weight: bold; 
+            color: #fffb00; 
+            margin: 15px 0;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.08); }
+        }
+        .result-desc { font-size: 22px; font-weight: bold; line-height: 1.5; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="game"></div>
+
+<script>
+const questions = [
+    {
+        text: "Как меня зовут?",
+        answers: [
+            { text: "1. Влад", comment: "Слишком скучно" },
+            { text: "2. Владик", comment: "Какая умница" }
+        ]
+    },
+    {
+        text: "Какого цвета у меня носки?",
+        answers: [
+            { text: "1. Розовые", comment: "Я без носков" },
+            { text: "2. Черные", comment: "Я без носков" }
+        ]
+    },
+    {
+        text: "Как зовут моих котов?",
+        answers: [
+            { text: "1. Руслик и Феликс", comment: "Э, я обижусь так-то" },
+            { text: "2. Мия и Феликс", comment: "Молодчина" }
+        ]
+    },
+    {
+        text: "На какой минуте просмотра фильма я моргнул ровно 28 раз?",
+        answers: [
+            { text: "1. 17", comment: "Вообще-то на 43, как так?" },
+            { text: "2. 43", comment: "Вообще-то на 17, как так?" }
+        ]
+    },
+    {
+        text: "Когда у меня день рождения?",
+        answers: [
+            { text: "1. 6 ноября", comment: "Откуда ты знаешь?" },
+            { text: "2. Вчера", comment: "Я щас обижусь" }
+        ]
+    },
+    {
+        text: "Во сколько времени я родился?",
+        answers: [
+            { text: "1. 3 ночи", comment: "Какая умница" },
+            { text: "2. 8 утра", comment: "Э" }
+        ]
+    },
+    {
+        text: "Сколько шагов за жизнь я сделал?",
+        answers: [
+            { text: "1. 193742145235", comment: "Наверное" },
+            { text: "2. 8", comment: "Тоже неплохо" }
+        ]
+    },
+    {
+        text: "Морковка или картошка?",
+        answers: [
+            { text: "1. Морковка", comment: "Смотря с чем" },
+            { text: "2. Картошка", comment: "Смотря как приготовить" }
+        ]
+    },
+    {
+        text: "Выбери букву:",
+        answers: [
+            { text: "1. Г", comment: "Что Г" },
+            { text: "2. В", comment: "Что В" }
+        ]
+    },
+    {
+        text: "Ты гей?",
+        answers: [
+            { text: "Да", comment: "Я так и знал" }
+        ]
+    }
+];
+
+let currentQuestion = 0;
+
+function startGame() {
+    currentQuestion = 0;
+    showQuestion();
+}
+
+function showQuestion() {
+    const container = document.getElementById('game');
+    const q = questions[currentQuestion];
+    
+    let answersHtml = '';
+    
+    if (currentQuestion === 9) {
+        answersHtml = `
+            <button class="btn" style="position: absolute; top: 0; left: 0; text-align:left;" onclick="showComment('Я так и знал')">Да</button>
+            <button class="btn" id="run-btn" onclick="runAway(event)" ontouchstart="runAway(event)">Нет</button>
+        `;
+    } else {
+        q.answers.forEach(answer => {
+            answersHtml += `<button class="btn" onclick="showComment('${answer.comment}')">${answer.text}</button>`;
+        });
+    }
+
+    container.innerHTML = `
+        <div class="progress">Вопрос ${currentQuestion + 1} из ${questions.length}</div>
+        <h2>${q.text}</h2>
+        <div class="answers-wrapper" id="wrapper">${answersHtml}</div>
+    `;
+}
+
+function showComment(commentText) {
+    const container = document.getElementById('game');
+    
+    container.innerHTML = `
+        <div class="progress">Вопрос ${currentQuestion + 1} из ${questions.length}</div>
+        <div class="comment-text">${commentText}</div>
+        <button class="btn next-btn" onclick="nextQuestion()">Далее</button>
+    `;
+}
+
+function nextQuestion() {
+    currentQuestion++;
+    if (currentQuestion < questions.length) {
+        showQuestion();
+    } else {
+        showResult();
+    }
+}
+
+function runAway(event) {
+    if (event) {
+        event.preventDefault(); 
+        event.stopPropagation();
+    }
+    
+    const btn = document.getElementById('run-btn');
+    const wrapper = document.getElementById('wrapper');
+    if (!btn || !wrapper) return;
+    
+    const wrapperWidth = wrapper.clientWidth;
+    const wrapperHeight = wrapper.clientHeight;
+    
+    const btnWidth = btn.clientWidth;
+    const btnHeight = btn.clientHeight;
+    
+    const minY = 60;
+    const maxX = wrapperWidth - btnWidth;
+    const maxY = wrapperHeight - btnHeight;
+    
+    const randomX = Math.random() * maxX;
+    const randomY = Math.random() * (maxY - minY) + minY;
+    
+    btn.style.left = randomX + 'px';
+    btn.style.top = randomY + 'px';
+}
+
+function showResult() {
+    const container = document.getElementById('game');
+    container.innerHTML = `
+        <h2>Даша, твой результат:</h2>
+        <div class="result-percent">100%</div>
+        <div class="result-desc">На 100% гей!!! Дашка, а я говорил.(любя) 👀</div>
+        <button class="btn next-btn" style="margin-top:25px;" onclick="startGame()">Пройти еще раз</button>
+    `;
+}
+
+startGame();
+</script>
+</body>
+</html>
